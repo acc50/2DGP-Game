@@ -5,32 +5,40 @@ import os
 from pico2d import *
 
 import game_framework
+import game_world
 
 
 from player import Player
-from grass import Grass
-
-
+from tile import Tile
+from missile_turret import MissileTurret
 
 name = "MainState"
 
 player = None
-grass = None
-font = None
-
+background = None
 
 
 def enter():
-    global player, grass
+    global player, background
     player = Player()
-    grass = Grass()
+    tile1 = Tile(200, 30)
+    tile2 = Tile(600, 30)
+    missile_turret1 = MissileTurret(100, 500)        # 임시 배치
+    missile_turret2 = MissileTurret(600, 500)        # 임시 배치
+
+    game_world.add_object(tile1, 0)
+    game_world.add_object(tile2, 0)
+    game_world.add_object(player, 1)
+    game_world.add_object(missile_turret1, 1)
+    game_world.add_object(missile_turret2, 1)
+    background = load_image('Cave.png')
+
 
 
 def exit():
-    global player, grass
-    del player
-    del grass
-
+    global background
+    game_world.clear()
+    del background
 
 
 def pause():
@@ -52,14 +60,19 @@ def handle_events():
             player.handle_event(event)
 
 
-
 def update():
-    player.update()
+    for game_object in game_world.all_objects():
+        game_object.update()
+
 
 def draw():
     clear_canvas()
-    grass.draw()
-    player.draw()
+    background.clip_draw(0, 12, 32, 40, 200, 150, 400, 300)     # 배경
+    background.clip_draw(0, 12, 32, 40, 600, 150, 400, 300)     # 배경
+    background.clip_draw(0, 12, 32, 40, 200, 450, 400, 300)     # 배경
+    background.clip_draw(0, 12, 32, 40, 600, 450, 400, 300)     # 배경
+    for game_object in game_world.all_objects():
+        game_object.draw()
     update_canvas()
 
 
