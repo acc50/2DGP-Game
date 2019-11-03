@@ -1,5 +1,8 @@
 from pico2d import *
 
+from boost import Boost
+import game_world
+
 RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, BOOST_TIMER, SPACE_DOWN, \
  SPACE_UP, UP_UP, UP_DOWN, DOWN_UP, DOWN_DOWN, BOOST = range(13)
 
@@ -42,7 +45,8 @@ class IdleState:
             elif player.is_jump:  # 점프를 한 상태에선 부스트 사용함
                 player.boost_gauge = 1000
                 player.velocity_y = player.dir_y
-                print(player.velocity_y)
+                player.is_boost = True
+                player.boost_frame = 0
                 player.add_event(BOOST)
         elif event == SPACE_UP:
             player.jump_timer = 200
@@ -110,6 +114,8 @@ class RunState:
             elif player.is_jump:  # 점프를 한 상태에선 부스트 사용함
                 player.boost_gauge = 1000
                 player.velocity_y = player.dir_y
+                player.is_boost = True
+                player.boost_frame = 0
                 player.add_event(BOOST)
         elif event == SPACE_UP:
             player.jump_timer = 200
@@ -207,11 +213,13 @@ class BoostState:  # 부스트 형식으로 해야함
         elif player.velocity_y == -1:
             player.y += (player.velocity_y * 1.3)
             if player.y == 90:      # 바닥과 닿으면
+                player.is_boost = False
                 player.add_event(SPACE_UP)
         else:
             player.x += (player.velocity_x * 1.3)
 
         if player.boost_gauge == 0:
+            player.is_boost = True
             player.add_event(BOOST_TIMER)
             player.dir_x = 0
 
@@ -224,13 +232,30 @@ class BoostState:  # 부스트 형식으로 해야함
         if player.dir_y > 0:  # 위를 바라봄
             if player.velocity_x == 1:
                 player.image.clip_draw((player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
+                boost = Boost(player.x, player.y - 35, 0, -10)
+                game_world.add_object(boost, 1)
             else:
                 player.image.clip_draw((player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
+                boost = Boost(player.x, player.y - 35, 0, -10)
+                game_world.add_object(boost, 1)
+        elif player.dir_y < 0:  # 아래를 바라봄
+            if player.velocity_x == 1:
+                player.image.clip_draw(6 * 48, 192, 48, 48, player.x, player.y)
+                boost = Boost(player.x, player.y + 35, 0, +10)
+                game_world.add_object(boost, 1)
+            else:
+                player.image.clip_draw(6 * 48, 240, 48, 48, player.x, player.y)
+                boost = Boost(player.x, player.y + 35, 0, +10)
+                game_world.add_object(boost, 1)
         else:  # 위를 바라보지않음
             if player.velocity_x == 1:
                 player.image.clip_draw(player.frame * 48, 192, 48, 48, player.x, player.y)
+                boost = Boost(player.x - 35, player.y, -10, 0)
+                game_world.add_object(boost, 1)
             else:
                 player.image.clip_draw(player.frame * 48, 240, 48, 48, player.x, player.y)
+                boost = Boost(player.x + 35, player.y, 10, 0)
+                game_world.add_object(boost, 1)
 
 
 next_state_table = {
@@ -259,7 +284,7 @@ next_state_table = {
 class Player:
     def __init__(self):
         self.x, self.y = 500, 90
-        self.image = load_image('character_sprite.png')  # 48*48 이 캐릭터 크기
+        self.image = load_image('./Image/Character/character_sprite.png')  # 48*48 이 캐릭터 크기
         self.dir_x = 1
         self.dir_y = 0
         self.velocity_x = 0
@@ -269,6 +294,7 @@ class Player:
         self.jump_timer = 0  # 점프 체공시간
         self.jump_count = 1  # 2단 점프
         self.is_jump = False
+        self.is_boost = False
         self.boost_gauge = 1000
         self.event_que = []
         self.cur_state = IdleState

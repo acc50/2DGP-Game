@@ -31,7 +31,7 @@ def enter():
     game_world.add_object(player, 1)
     game_world.add_object(missile_turret1, 1)
     game_world.add_object(missile_turret2, 1)
-    background = load_image('Cave.png')
+    background = load_image('./Image/Map/Cave.png')
 
 
 

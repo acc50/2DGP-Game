@@ -7,7 +7,7 @@ class Missile:
 
     def __init__(self, x=400, y=300, velocity_x=1, velocity_y=1):
         if Missile.image is None:
-            Missile.image = load_image('missile.png')  # 253 * 178
+            Missile.image = load_image('./Image/Enemy/missile.png')  # 253 * 178
         self.x, self.y = x, y
         self.velocity_x = velocity_x
         self.velocity_y = velocity_y

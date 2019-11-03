@@ -3,7 +3,7 @@ from pico2d import *
 
 class Tile:
     def __init__(self, x, y):
-        self.image = load_image('tile.png')
+        self.image = load_image('./Image/Map/tile.png')
         self.x, self.y = x, y
 
     def update(self):

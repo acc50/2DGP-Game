@@ -9,7 +9,7 @@ class MissileTurret:
 
     def __init__(self, x = 400, y = 300):
         if MissileTurret.image is None:
-            MissileTurret.image = load_image('turret-sprite.png')   # 1024  * 1024  8칸씩
+            MissileTurret.image = load_image('./Image/Enemy/turret-sprite.png')   # 1024  * 1024  8칸씩
         self.x, self.y = x, y
         self.frame_x = 0
         self.frame_y = 3        # 프레임은 0,3 위치가 초기값
