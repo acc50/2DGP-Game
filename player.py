@@ -211,25 +211,50 @@ class SleepState:
 class BoostState:  # 부스트 형식으로 해야함
     @staticmethod
     def enter(player, event):
-        if event == RIGHT_DOWN:
-            player.velocity_x += BOOST_SPEED_PPS
-        elif event == LEFT_DOWN:
-            player.velocity_x -= BOOST_SPEED_PPS
-        elif event == RIGHT_UP:
-            player.velocity_x -= BOOST_SPEED_PPS
-        elif event == LEFT_UP:
-            player.velocity_x += BOOST_SPEED_PPS
+        if player.boost_dir is UP or player.boost_dir is DOWN:      # 위쪽, 아래쪽 부스트시엔 좌우이동 X
+            if event == RIGHT_DOWN:
+                player.view_dir_x += 1
+            elif event == LEFT_DOWN:
+                player.view_dir_x -= 1
+            elif event == RIGHT_UP:
+                player.view_dir_x -= 1
+            elif event == LEFT_UP:
+                player.view_dir_x += 1
+
+            if event == UP_DOWN:
+                player.view_dir_y += 1
+            elif event == UP_UP:
+                player.view_dir_y -= 1
+            elif event == DOWN_DOWN:
+                player.view_dir_y -= 1
+            elif event == DOWN_UP:
+                player.view_dir_y += 1
+
+            player.velocity_y = player.view_dir_y * BOOST_SPEED_PPS
+
+        elif player.boost_dir is LEFT or player.boost_dir is RIGHT:  # 왼쪽 or 오른쪽 부스트시엔 좌우이동 O
+            player.velocity_x = player.dir_x * BOOST_SPEED_PPS
+
+            if event == RIGHT_DOWN:
+                player.velocity_x += BOOST_SPEED_PPS
+            elif event == LEFT_DOWN:
+                player.velocity_x -= BOOST_SPEED_PPS
+            elif event == RIGHT_UP:
+                player.velocity_x -= BOOST_SPEED_PPS
+            elif event == LEFT_UP:
+                player.velocity_x += BOOST_SPEED_PPS
+
+            if event == UP_DOWN:
+                player.view_dir_y += 1
+            elif event == DOWN_DOWN:
+                player.view_dir_y -= 1
+            elif event == UP_UP:
+                player.view_dir_y -= 1
+            elif event == DOWN_UP:
+                player.view_dir_y += 1
+            pass
 
         player.dir_x = clamp(-1, player.velocity_x, 1)
-
-        if event == UP_DOWN:
-            player.view_dir_y += 1
-        elif event == UP_UP:
-            player.view_dir_y -= 1
-        elif event == DOWN_DOWN:
-            player.view_dir_y -= 1
-        elif event == DOWN_UP:
-            player.view_dir_y += 1
 
     @staticmethod
     def exit(player, event):
@@ -239,15 +264,15 @@ class BoostState:  # 부스트 형식으로 해야함
     def do(player):
         player.boost_gauge -= 1
 
-        if player.velocity_y == 1:
-            player.y += (player.velocity_y * 1.3)
-        elif player.velocity_y == -1:
-            player.y += (player.velocity_y * 1.3)
+        if player.velocity_y > 0:
+            player.y += player.velocity_y * game_framework.frame_time
+        elif player.velocity_y < 0:
+            player.y += player.velocity_y * game_framework.frame_time
             if player.y == 90:      # 바닥과 닿으면
                 player.is_boost = False
                 player.add_event(SPACE_UP)
         else:
-            player.x += (player.velocity_x * 1.3)
+            player.x += player.velocity_x * game_framework.frame_time
 
         if player.boost_gauge == 0:
             player.is_boost = True
@@ -381,4 +406,3 @@ class Player:
             elif self.dir_x == 0:
                 self.boost_dir = UP
             pass
-
