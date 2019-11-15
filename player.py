@@ -2,6 +2,20 @@ from pico2d import *
 
 from boost import Boost
 import game_world
+import game_framework
+
+PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
+RUN_SPEED_KMPH = 30.0  # 14 Km / Hour
+RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
+RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
+RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
+
+TIME_PER_ACTION = 0.5
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 3
+
+FALL_SPEED = 300
+JUMP_SPEED = 300
 
 RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, BOOST_TIMER, SPACE_DOWN, \
  SPACE_UP, UP_UP, UP_DOWN, DOWN_UP, DOWN_DOWN, BOOST = range(13)
@@ -24,14 +38,15 @@ class IdleState:
     @staticmethod
     def enter(player, event):
         if event == RIGHT_DOWN:
-            player.velocity_x += 1
+            player.velocity_x += RUN_SPEED_PPS
         elif event == LEFT_DOWN:
-            player.velocity_x -= 1
+            player.velocity_x -= RUN_SPEED_PPS
         elif event == RIGHT_UP:
-            player.velocity_x -= 1
+            player.velocity_x -= RUN_SPEED_PPS
         elif event == LEFT_UP:
-            player.velocity_x += 1
-        elif event == UP_DOWN:
+            player.velocity_x += RUN_SPEED_PPS
+
+        if event == UP_DOWN:
             player.dir_y += 1
         elif event == UP_UP:
             player.dir_y -= 1
@@ -39,7 +54,8 @@ class IdleState:
             player.dir_y -= 1
         elif event == DOWN_UP:
             player.dir_y += 1
-        elif event == SPACE_DOWN:
+
+        if event == SPACE_DOWN:
             if player.is_jump is False:
                 player.is_jump = True
             elif player.is_jump:  # 점프를 한 상태에선 부스트 사용함
@@ -78,29 +94,31 @@ class IdleState:
     @staticmethod
     def draw(player):
         if player.dir_y > 0:  # 위를 바라봄
-            if player.dir_x == 1:
-                player.image.clip_draw((player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
+            if player.dir_x > 0:
+                player.image.clip_draw(int(player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
             else:
-                player.image.clip_draw((player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
         else:  # 위를 바라보지않음
-            if player.dir_x == 1:
-                player.image.clip_draw(player.frame * 48, 192, 48, 48, player.x, player.y)
+            if player.dir_x > 0:
+                player.image.clip_draw(int(player.frame) * 48, 192, 48, 48, player.x, player.y)
             else:
-                player.image.clip_draw(player.frame * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame) * 48, 240, 48, 48, player.x, player.y)
 
 
 class RunState:
     @staticmethod
     def enter(player, event):
         if event == RIGHT_DOWN:
-            player.velocity_x += 1
+            player.velocity_x += RUN_SPEED_PPS
         elif event == LEFT_DOWN:
-            player.velocity_x -= 1
+            player.velocity_x -= RUN_SPEED_PPS
         elif event == RIGHT_UP:
-            player.velocity_x -= 1
+            player.velocity_x -= RUN_SPEED_PPS
         elif event == LEFT_UP:
-            player.velocity_x += 1
-        elif event == UP_DOWN:
+            player.velocity_x += RUN_SPEED_PPS
+        player.dir_x = clamp(-1, player.velocity_x, 1)
+
+        if event == UP_DOWN:
             player.dir_y += 1
         elif event == UP_UP:
             player.dir_y -= 1
@@ -108,7 +126,8 @@ class RunState:
             player.dir_y -= 1
         elif event == DOWN_UP:
             player.dir_y += 1
-        elif event == SPACE_DOWN:
+
+        if event == SPACE_DOWN:
             if player.is_jump is False:
                 player.is_jump = True
             elif player.is_jump:  # 점프를 한 상태에선 부스트 사용함
@@ -119,7 +138,6 @@ class RunState:
                 player.add_event(BOOST)
         elif event == SPACE_UP:
             player.jump_timer = 200
-        player.dir_x = player.velocity_x
 
     @staticmethod
     def exit(player, event):
@@ -127,9 +145,8 @@ class RunState:
 
     @staticmethod
     def do(player):
-        player.frame = (player.frame + 1) % 3
-        player.timer -= 1
-        player.x += player.velocity_x
+        player.frame = (player.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 3
+        player.x += player.velocity_x * game_framework.frame_time
         player.x = clamp(25, player.x, 800 - 25)
 
         if player.is_jump and (player.jump_timer < 200):
@@ -147,15 +164,15 @@ class RunState:
     @staticmethod
     def draw(player):
         if player.dir_y > 0:  # 위를 바라봄
-            if player.velocity_x == 1:
-                player.image.clip_draw((player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
+            if player.velocity_x > 0:
+                player.image.clip_draw(int(player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
             else:
-                player.image.clip_draw((player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
         else:  # 위를 바라보지않음
-            if player.velocity_x == 1:
-                player.image.clip_draw(player.frame * 48, 192, 48, 48, player.x, player.y)
+            if player.velocity_x > 0:
+                player.image.clip_draw(int(player.frame) * 48, 192, 48, 48, player.x, player.y)
             else:
-                player.image.clip_draw(player.frame * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame) * 48, 240, 48, 48, player.x, player.y)
 
 
 class SleepState:
@@ -231,11 +248,11 @@ class BoostState:  # 부스트 형식으로 해야함
     def draw(player):
         if player.dir_y > 0:  # 위를 바라봄
             if player.velocity_x == 1:
-                player.image.clip_draw((player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame + 3) * 48, 192, 48, 48, player.x, player.y)
                 boost = Boost(player.x, player.y - 35, 0, -10)
                 game_world.add_object(boost, 1)
             else:
-                player.image.clip_draw((player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame + 3) * 48, 240, 48, 48, player.x, player.y)
                 boost = Boost(player.x, player.y - 35, 0, -10)
                 game_world.add_object(boost, 1)
         elif player.dir_y < 0:  # 아래를 바라봄
@@ -249,11 +266,11 @@ class BoostState:  # 부스트 형식으로 해야함
                 game_world.add_object(boost, 1)
         else:  # 위를 바라보지않음
             if player.velocity_x == 1:
-                player.image.clip_draw(player.frame * 48, 192, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame) * 48, 192, 48, 48, player.x, player.y)
                 boost = Boost(player.x - 35, player.y, -10, 0)
                 game_world.add_object(boost, 1)
             else:
-                player.image.clip_draw(player.frame * 48, 240, 48, 48, player.x, player.y)
+                player.image.clip_draw(int(player.frame) * 48, 240, 48, 48, player.x, player.y)
                 boost = Boost(player.x + 35, player.y, 10, 0)
                 game_world.add_object(boost, 1)
 
@@ -287,6 +304,10 @@ class Player:
         self.image = load_image('./Image/Character/character_sprite.png')  # 48*48 이 캐릭터 크기
         self.dir_x = 1
         self.dir_y = 0
+
+        self.move_dir = 0
+        self.view_dir = 0
+
         self.velocity_x = 0
         self.velocity_y = 0
         self.frame = 0  # 캐릭터 프레임
