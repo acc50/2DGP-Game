@@ -202,7 +202,7 @@ class SleepState:
 
     @staticmethod
     def draw(player):
-        if player.dir_x == 1:
+        if player.dir_x > 0:
             player.image.clip_draw(player.frame * 48, 192, 48, 48, player.x, player.y)
         else:
             player.image.clip_draw(player.frame * 48, 240, 48, 48, player.x, player.y)
@@ -211,7 +211,7 @@ class SleepState:
 class BoostState:  # 부스트 형식으로 해야함
     @staticmethod
     def enter(player, event):
-        if player.boost_dir is UP or player.boost_dir is DOWN:      # 위쪽, 아래쪽 부스트시엔 좌우이동 X
+        if player.boost_dir is UP or player.boost_dir is DOWN:      # 위 or 아래쪽 부스트시엔 좌우이동 X
             if event == RIGHT_DOWN:
                 player.view_dir_x += 1
             elif event == LEFT_DOWN:
@@ -230,7 +230,10 @@ class BoostState:  # 부스트 형식으로 해야함
             elif event == DOWN_UP:
                 player.view_dir_y += 1
 
-            player.velocity_y = player.view_dir_y * BOOST_SPEED_PPS
+            if player.boost_dir is UP:
+                player.velocity_y = BOOST_SPEED_PPS
+            else:
+                player.velocity_y = -BOOST_SPEED_PPS
 
         elif player.boost_dir is LEFT or player.boost_dir is RIGHT:  # 왼쪽 or 오른쪽 부스트시엔 좌우이동 O
             player.velocity_x = player.dir_x * BOOST_SPEED_PPS
@@ -254,7 +257,7 @@ class BoostState:  # 부스트 형식으로 해야함
                 player.view_dir_y += 1
             pass
 
-        player.dir_x = clamp(-1, player.velocity_x, 1)
+        # player.dir_x = clamp(-1, player.velocity_x, 1)
 
     @staticmethod
     def exit(player, event):
@@ -264,20 +267,16 @@ class BoostState:  # 부스트 형식으로 해야함
     def do(player):
         player.boost_gauge -= 1
 
-        if player.velocity_y > 0:
+        if player.velocity_y is not 0:
             player.y += player.velocity_y * game_framework.frame_time
-        elif player.velocity_y < 0:
-            player.y += player.velocity_y * game_framework.frame_time
-            if player.y == 90:      # 바닥과 닿으면
-                player.is_boost = False
-                player.add_event(SPACE_UP)
+            # 바닥과 충돌 시 처리 필요
         else:
             player.x += player.velocity_x * game_framework.frame_time
 
         if player.boost_gauge == 0:
             player.is_boost = True
             player.add_event(BOOST_TIMER)
-            player.dir_x = 0
+            # player.dir_x = 0
 
         player.x = clamp(25, player.x, 800 - 25)
         player.y = clamp(90, player.y, 600 - 40)
@@ -331,7 +330,7 @@ next_state_table = {
                  DOWN_UP: IdleState, DOWN_DOWN: IdleState},
     BoostState: {LEFT_UP: BoostState, RIGHT_UP: BoostState,
                  LEFT_DOWN: BoostState, RIGHT_DOWN: BoostState,
-                 BOOST_TIMER: RunState, SPACE_DOWN: BoostState,
+                 BOOST_TIMER: IdleState, SPACE_DOWN: BoostState,
                  SPACE_UP: IdleState, UP_UP: BoostState, UP_DOWN: BoostState,
                  DOWN_UP: BoostState, DOWN_DOWN: BoostState}
 }
@@ -401,8 +400,11 @@ class Player:
                 self.boost_dir = RIGHT
             elif self.dir_x < 0:
                 self.boost_dir = LEFT
-            elif self.dir_y < 0:
+            elif self.view_dir_y < 0:
                 self.boost_dir = DOWN
             elif self.dir_x == 0:
                 self.boost_dir = UP
             pass
+
+    def get_view_dir(self):
+        return self.view_dir_x, self.view_dir_y
