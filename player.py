@@ -3,6 +3,8 @@ from pico2d import *
 from boost import Boost
 import game_world
 import game_framework
+from arms import Spur, MissileLauncher, Blade, Nemesis
+
 
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
 RUN_SPEED_KMPH = 30.0  # 14 Km / Hour
@@ -24,7 +26,8 @@ JUMP_SPEED = 300
 MAX_BOOST_GAUGE = 1000
 
 RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, BOOST_TIMER, SPACE_DOWN, \
- SPACE_UP, UP_UP, UP_DOWN, DOWN_UP, DOWN_DOWN, BOOST = range(13)
+ SPACE_UP, UP_UP, UP_DOWN, DOWN_UP, DOWN_DOWN, BOOST, X_DOWN, X_UP, \
+    A_DOWN, S_DOWN = range(17)
 
 UP, DOWN, LEFT, RIGHT = range(4)
 
@@ -39,6 +42,10 @@ key_event_table = {
     (SDL_KEYDOWN, SDLK_DOWN): DOWN_DOWN,
     (SDL_KEYUP, SDLK_UP): UP_UP,
     (SDL_KEYUP, SDLK_DOWN): DOWN_UP,
+    (SDL_KEYDOWN, SDLK_x): X_DOWN,
+    (SDL_KEYUP, SDLK_x): X_UP,
+    (SDL_KEYDOWN, SDLK_a): A_DOWN,
+    (SDL_KEYDOWN, SDLK_s): S_DOWN
 }
 
 
@@ -53,6 +60,17 @@ class IdleState:
             player.velocity_x -= RUN_SPEED_PPS
         elif event == LEFT_UP:
             player.velocity_x += RUN_SPEED_PPS
+
+        elif event == X_UP:
+            pass
+        elif event == X_DOWN:
+            pass
+        elif event == A_DOWN:
+            player.current_arm = -1
+            if player.current_arm < 0:
+                player.current_arm = 3
+        elif event == S_DOWN:
+            player.current_arm = (player.current_arm + 1) % 4
 
         if event == UP_DOWN:
             player.view_dir_y += 1
@@ -126,6 +144,18 @@ class RunState:
             player.velocity_x -= RUN_SPEED_PPS
         elif event == LEFT_UP:
             player.velocity_x += RUN_SPEED_PPS
+
+        elif event == X_UP:
+            pass
+        elif event == X_DOWN:
+            pass
+        elif event == A_DOWN:
+            player.current_arm = -1
+            if player.current_arm < 0:
+                player.current_arm = 3
+        elif event == S_DOWN:
+            player.current_arm = (player.current_arm + 1) % 4
+
         player.dir_x = clamp(-1, player.velocity_x, 1)
 
         if event == UP_DOWN:
@@ -190,6 +220,18 @@ class RunState:
 class SleepState:
     @staticmethod
     def enter(player, event):
+
+        if event == X_UP:
+            pass
+        elif event == X_DOWN:
+            pass
+        elif event == A_DOWN:
+            player.current_arm = -1
+            if player.current_arm < 0:
+                player.current_arm = 3
+        elif event == S_DOWN:
+            player.current_arm = (player.current_arm + 1) % 4
+
         player.frame = 0
 
     @staticmethod
@@ -220,6 +262,17 @@ class BoostState:  # 부스트 형식으로 해야함
                 player.view_dir_x -= 1
             elif event == LEFT_UP:
                 player.view_dir_x += 1
+
+            elif event == X_UP:
+                pass
+            elif event == X_DOWN:
+                pass
+            elif event == A_DOWN:
+                player.current_arm = -1
+                if player.current_arm < 0:
+                    player.current_arm = 3
+            elif event == S_DOWN:
+                player.current_arm = (player.current_arm + 1) % 4
 
             if event == UP_DOWN:
                 player.view_dir_y += 1
@@ -318,21 +371,25 @@ next_state_table = {
                 RIGHT_DOWN: RunState, LEFT_DOWN: RunState,
                 SLEEP_TIMER: SleepState, SPACE_DOWN: IdleState,
                 SPACE_UP: IdleState, UP_UP: IdleState, UP_DOWN: IdleState,
-                DOWN_UP: IdleState, DOWN_DOWN: IdleState, BOOST: BoostState},
+                DOWN_UP: IdleState, DOWN_DOWN: IdleState, BOOST: BoostState,
+                A_DOWN: IdleState, S_DOWN: IdleState, X_DOWN: IdleState, X_UP:IdleState},
     RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState,
                LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState,
                SPACE_UP: RunState, SPACE_DOWN: RunState,
                UP_UP: RunState, UP_DOWN: RunState,
-               DOWN_UP: RunState, DOWN_DOWN: RunState, BOOST: BoostState},
+               DOWN_UP: RunState, DOWN_DOWN: RunState, BOOST: BoostState,
+               A_DOWN: RunState, S_DOWN: RunState, X_DOWN: RunState, X_UP: RunState},
     SleepState: {LEFT_DOWN: RunState, RIGHT_DOWN: RunState,
                  LEFT_UP: RunState, RIGHT_UP: RunState,
                  SPACE_DOWN: IdleState, UP_UP: IdleState, UP_DOWN: IdleState,
-                 DOWN_UP: IdleState, DOWN_DOWN: IdleState},
+                 DOWN_UP: IdleState, DOWN_DOWN: IdleState,
+                 A_DOWN: SleepState, S_DOWN: SleepState, X_DOWN: SleepState, X_UP: SleepState},
     BoostState: {LEFT_UP: BoostState, RIGHT_UP: BoostState,
                  LEFT_DOWN: BoostState, RIGHT_DOWN: BoostState,
                  BOOST_TIMER: IdleState, SPACE_DOWN: BoostState,
                  SPACE_UP: IdleState, UP_UP: BoostState, UP_DOWN: BoostState,
-                 DOWN_UP: BoostState, DOWN_DOWN: BoostState}
+                 DOWN_UP: BoostState, DOWN_DOWN: BoostState, A_DOWN: BoostState,
+                 S_DOWN: BoostState, X_DOWN: BoostState, X_UP: BoostState}
 }
 
 
@@ -357,6 +414,10 @@ class Player:
         self.is_jump = False
         self.is_boost = False
         self.boost_gauge = 1000
+
+        self.arms = [Spur(), MissileLauncher(), Blade(), Nemesis()]
+        self.current_arm = 0
+
         self.event_que = []
         self.cur_state = IdleState
         self.cur_state.enter(self, None)

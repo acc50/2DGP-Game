@@ -7,8 +7,10 @@ INFINITE = 1000
 
 
 class Arms:
-    def __init__(self, x=400, y=300, velocity_x=1, velocity_y=1):
-        self.x, self.y = x, y
+    image = None
+
+    def __init__(self):
+        self.x, self.y = 400, 300
         self.shoot_dir = RIGHT
 
     def draw(self):
@@ -36,7 +38,7 @@ class Spur(Arms):  # 레이저
 
     def __init__(self):
         if Spur.arm_image is None:
-            Spur.arm_image = load_image('Spur.png')     # 24 * 97
+            Spur.arm_image = load_image('./Image/Arms/Spur.png')     # 24 * 97
 
         self.level = 1
         self.MAX_BULLETS = INFINITE
@@ -66,7 +68,7 @@ class MissileLauncher(Arms):
 
     def __init__(self):
         if MissileLauncher.arm_image is None:
-            MissileLauncher.arm_image = load_image('MissileLauncher.png')   # 30 * 100
+            MissileLauncher.arm_image = load_image('./Image/Arms/MissileLauncher.png')   # 30 * 100
 
         self.level = 1
         self.MAX_BULLETS = 30
@@ -95,7 +97,7 @@ class Blade(Arms):
 
     def __init__(self):
         if Blade.arm_image is None:
-            Blade.arm_image = load_image('Spur.png')
+            Blade.arm_image = load_image('./Image/Arms/Spur.png')
 
         self.level = 1
         self.MAX_BULLETS = INFINITE
@@ -118,16 +120,17 @@ class Blade(Arms):
         elif self.shoot_dir is LEFT:
             pass
 
-    def draw(self): # 공격시만 무기가 보이므로 따로 그림
+    def draw(self):  # 공격시만 무기가 보이므로 따로 그림
         pass
 
 
 class Nemesis(Arms):
     arm_image = None
+    bullet_image = None
 
     def __init__(self):
         if Nemesis.arm_image is None:
-            Nemesis.arm_image = load_image('Spur.png')
+            Nemesis.arm_image = load_image('./Image/Arms/Nemesis.png')      # 24 * 94
 
         self.level = 1
         self.MAX_BULLETS = 30
