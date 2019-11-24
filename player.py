@@ -30,6 +30,7 @@ RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, BOOST_TIMER, SPACE_DOWN, 
     A_DOWN, S_DOWN = range(17)
 
 UP, DOWN, LEFT, RIGHT = range(4)
+NEXT, PRE = range(2)
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_RIGHT): RIGHT_DOWN,
@@ -66,18 +67,10 @@ class IdleState:
         elif event == X_UP:
             pass
         elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
-            game_world.remove_object(player.arms[player.current_arm])
-
-            player.current_arm -= 1
-            if player.current_arm < 0:
-                player.current_arm = 3
-
-            game_world.add_object(player.arms[player.current_arm], 1)
+            player.change_arm(PRE)
 
         elif event == S_DOWN:
-            game_world.remove_object(player.arms[player.current_arm])
-            player.current_arm = (player.current_arm + 1) % 4
-            game_world.add_object(player.arms[player.current_arm], 1)
+            player.change_arm(NEXT)
 
         if event == UP_DOWN:
             player.view_dir_y += 1
@@ -156,12 +149,12 @@ class RunState:
             pass
         elif event == X_UP:
             pass
-        elif event == A_DOWN:
-            player.current_arm = -1
-            if player.current_arm < 0:
-                player.current_arm = 3
+
+        elif event == A_DOWN:  # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
+            player.change_arm(PRE)
+
         elif event == S_DOWN:
-            player.current_arm = (player.current_arm + 1) % 4
+            player.change_arm(NEXT)
 
         player.dir_x = clamp(-1, player.velocity_x, 1)
 
@@ -232,12 +225,12 @@ class SleepState:
             pass
         elif event == X_DOWN:
             pass
-        elif event == A_DOWN:
-            player.current_arm = -1
-            if player.current_arm < 0:
-                player.current_arm = 3
+
+        elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
+            player.change_arm(PRE)
+
         elif event == S_DOWN:
-            player.current_arm = (player.current_arm + 1) % 4
+            player.change_arm(NEXT)
 
         player.frame = 0
 
@@ -275,12 +268,12 @@ class BoostState:  # 부스트 형식으로 해야함
             elif event == X_DOWN:
                 print('attack')
                 pass
-            elif event == A_DOWN:
-                player.current_arm = -1
-                if player.current_arm < 0:
-                    player.current_arm = 3
+
+            elif event == A_DOWN:  # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
+                player.change_arm(PRE)
+
             elif event == S_DOWN:
-                player.current_arm = (player.current_arm + 1) % 4
+                player.change_arm(NEXT)
 
             if event == UP_DOWN:
                 player.view_dir_y += 1
@@ -463,6 +456,7 @@ class Player:
     def set_boost_dir(self):
         if self.view_dir_y > 0:     # 위를 바라보고있으면
             self.boost_dir = UP
+            print('up')
             pass
         else:
             if self.dir_x > 0:
@@ -476,5 +470,21 @@ class Player:
             pass
 
     def get_player_move(self):
-        return self.velocity_x, self.move_dir, self.view_dir_x
+        return self.view_dir_y, self.dir_x, self.x, self.y
+
+    def change_arm(self, key):
+        if key is NEXT:
+            game_world.remove_object(self.arms[self.current_arm])
+            self.current_arm = (self.current_arm + 1) % 4
+            game_world.add_object(self.arms[self.current_arm], 1)
+
+        elif key is PRE:
+            game_world.remove_object(self.arms[self.current_arm])
+
+            self.current_arm -= 1
+            if self.current_arm < 0:
+                self.current_arm = 3
+
+            game_world.add_object(self.arms[self.current_arm], 1)
+
 

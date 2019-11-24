@@ -20,21 +20,21 @@ class Arms:
         self.frame_size_y = 0
 
     def draw(self):
-        self.arm_image.clip_draw(self.frame_x, self.frame_y, self.frame_size_x, self.frame_size_y, self.x, self.y, 40, 40)
+        self.arm_image.clip_draw(self.frame_x, self.frame_y, self.frame_size_x, self.frame_size_y, self.x, self.y, 30, 30)
 
+    def synchronize_to_player(self, player_view_dir_y, player_view_dir_x, x, y):
+        if player_view_dir_y > 0:
+            self.shoot_dir = UP
+        else:
+            if player_view_dir_x > 0:
+                self.shoot_dir = RIGHT
+            else:
+                self.shoot_dir = LEFT
+        self.player_move_dir = player_view_dir_x
+        # self.shoot_dir = player_view_dir
+        # self.player_move_dir = player_view_dir_y
+        self.x, self.y = x, y
 
-    def synchronize_to_player(self, player_speed, player_move_dir, player_view_dir):
-        self.shoot_dir = player_view_dir
-        self.player_move_dir = player_move_dir
-
-        if player_move_dir == UP:
-            self.y += player_speed
-        elif player_move_dir == DOWN:
-            self.y -= player_speed
-        elif player_move_dir == RIGHT:
-            self.x += player_speed
-        elif player_move_dir == LEFT:
-            self.x -= player_speed
         pass
 
 
