@@ -61,16 +61,23 @@ class IdleState:
         elif event == LEFT_UP:
             player.velocity_x += RUN_SPEED_PPS
 
+        elif event == X_DOWN:
+            print('hello')
         elif event == X_UP:
             pass
-        elif event == X_DOWN:
-            pass
-        elif event == A_DOWN:
-            player.current_arm = -1
+        elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
+            game_world.remove_object(player.arms[player.current_arm])
+
+            player.current_arm -= 1
             if player.current_arm < 0:
                 player.current_arm = 3
+
+            game_world.add_object(player.arms[player.current_arm], 1)
+
         elif event == S_DOWN:
+            game_world.remove_object(player.arms[player.current_arm])
             player.current_arm = (player.current_arm + 1) % 4
+            game_world.add_object(player.arms[player.current_arm], 1)
 
         if event == UP_DOWN:
             player.view_dir_y += 1
@@ -145,9 +152,9 @@ class RunState:
         elif event == LEFT_UP:
             player.velocity_x += RUN_SPEED_PPS
 
-        elif event == X_UP:
-            pass
         elif event == X_DOWN:
+            pass
+        elif event == X_UP:
             pass
         elif event == A_DOWN:
             player.current_arm = -1
@@ -266,6 +273,7 @@ class BoostState:  # 부스트 형식으로 해야함
             elif event == X_UP:
                 pass
             elif event == X_DOWN:
+                print('attack')
                 pass
             elif event == A_DOWN:
                 player.current_arm = -1
@@ -467,5 +475,6 @@ class Player:
                 self.boost_dir = UP
             pass
 
-    def get_view_dir(self):
-        return self.view_dir_x, self.view_dir_y
+    def get_player_move(self):
+        return self.velocity_x, self.move_dir, self.view_dir_x
+

@@ -11,11 +11,14 @@ import game_world
 from player import Player
 from tile import Tile
 from missile_turret import MissileTurret
+from arms import Spur, MissileLauncher, Blade, Nemesis
+
 
 name = "MainState"
 
 player = None
 background = None
+arms = []
 
 
 def enter():
@@ -33,6 +36,9 @@ def enter():
     game_world.add_object(missile_turret2, 1)
     background = load_image('./Image/Map/Cave.png')
 
+    global arms
+    arms = player.arms
+    game_world.add_object(arms[player.current_arm], 1)
 
 
 def exit():
@@ -63,6 +69,11 @@ def handle_events():
 def update():
     for game_object in game_world.all_objects():
         game_object.update()
+
+    arms[player.current_arm].synchronize_to_player(*player.get_player_move())
+
+
+
 
 
 def draw():
