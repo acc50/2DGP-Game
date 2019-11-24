@@ -55,7 +55,7 @@ class Spur(Arms):  # 레이저
         self.current_damage = 7
         self.current_bullets = 0
         self.max_shoot_count = INFINITE     # 최대 연사 수
-        self.range = 100
+        self.range = 600
 
         self.frame_x = 0
         self.frame_y = 0

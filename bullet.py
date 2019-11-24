@@ -29,6 +29,7 @@ class SpurBullet:
 
         self.dir = shoot_dir
         self.range = arm_range
+        self.speed_ratio = 0.8
 
         if arm_level is 1:
             if (shoot_dir is UP) or (shoot_dir is DOWN):
@@ -69,17 +70,22 @@ class SpurBullet:
             pass
 
     def draw(self):
-        self.image.clip_draw(self.frame_x, self.frame_y, self.size_x, self.size_y, self.x, self.y, 50, 50)
+        if self.dir is UP or self.dir is DOWN:
+            self.image.clip_draw(self.frame_x, self.frame_y, self.size_x, self.size_y, self.x, self.y,
+                                 self.size_x * 3, self.size_y * 2.5)
+        else:
+            self.image.clip_draw(self.frame_x, self.frame_y, self.size_x, self.size_y, self.x, self.y,
+                                 self.size_x * 3, self.size_y * 2.5)
 
     def update(self):
         if self.dir is UP:
-            self.y += BULLET_SPEED_PPS * game_framework.frame_time
+            self.y += BULLET_SPEED_PPS * self.speed_ratio * game_framework.frame_time
         elif self.dir is DOWN:
-            self.y -= BULLET_SPEED_PPS * game_framework.frame_time
+            self.y -= BULLET_SPEED_PPS * self.speed_ratio * game_framework.frame_time
         elif self.dir is RIGHT:
-            self.x += BULLET_SPEED_PPS * game_framework.frame_time
+            self.x += BULLET_SPEED_PPS * self.speed_ratio * game_framework.frame_time
         elif self.dir is LEFT:
-            self.x -= BULLET_SPEED_PPS * game_framework.frame_time
+            self.x -= BULLET_SPEED_PPS * self.speed_ratio * game_framework.frame_time
 
         if (self.shoot_point[0] - self.x)**2 + (self.shoot_point[1] - self.y)**2 > self.range**2:
             player = main_state.get_player()
