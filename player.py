@@ -7,7 +7,7 @@ from arms import Spur, MissileLauncher, Blade, Nemesis
 
 
 PIXEL_PER_METER = (10.0 / 0.3)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 30.0  # 14 Km / Hour
+RUN_SPEED_KMPH = 30.0  # 30 Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -63,7 +63,8 @@ class IdleState:
             player.velocity_x += RUN_SPEED_PPS
 
         elif event == X_DOWN:
-            print('hello')
+            player.arms[player.current_arm].shoot()
+
         elif event == X_UP:
             pass
         elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성

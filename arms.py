@@ -1,5 +1,7 @@
 from pico2d import *
+
 import game_world
+from bullet import MissileBullet
 
 UP, DOWN, RIGHT, LEFT = range(4)
 
@@ -118,7 +120,7 @@ class MissileLauncher(Arms):
         self.current_exp = 0
         self.current_bullets = 0
         self.MAX_SHOOT_COUNT = 1    # 최대 연사 수
-        self.range = 100
+        self.range = 250
 
         self.frame_x = 0
         self.frame_y = 0
@@ -165,14 +167,8 @@ class MissileLauncher(Arms):
             self.frame_y = 68
 
     def shoot(self):
-        if self.shoot_dir is UP:
-            pass
-        elif self.shoot_dir is DOWN:
-            pass
-        elif self.shoot_dir is RIGHT:
-            pass
-        elif self.shoot_dir is LEFT:
-            pass
+        bullet = MissileBullet(self.x, self.y, self.shoot_dir, self.range, self.level)
+        game_world.add_object(bullet, 1)
 
 
 class Blade(Arms):
