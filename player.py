@@ -63,10 +63,17 @@ class IdleState:
             player.velocity_x += RUN_SPEED_PPS
 
         elif event == X_DOWN:
-            player.arms[player.current_arm].shoot()
+            if player.current_arm is 0:     # Spur 이면 충전
+                player.arms[player.current_arm].is_charge = True
+                pass
+            else:               # Spur 가 아니면 발사
+                player.arms[player.current_arm].shoot()
 
-        elif event == X_UP:
-            pass
+        elif event == X_UP:             # Spur 는 뗄 때 발사
+            if player.current_arm is 0:
+                player.arms[player.current_arm].shoot()
+                player.arms[player.current_arm].is_charge = False
+
         elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
             player.change_arm(PRE)
 
@@ -147,9 +154,15 @@ class RunState:
             player.velocity_x += RUN_SPEED_PPS
 
         elif event == X_DOWN:
-            pass
-        elif event == X_UP:
-            pass
+            if player.current_arm is 0:  # Spur 이면 충전
+                player.arms[player.current_arm].is_charge = True
+            else:  # Spur 가 아니면 발사
+                player.arms[player.current_arm].shoot()
+
+        elif event == X_UP:  # Spur 는 뗄 때 발사
+            if player.current_arm is 0:
+                player.arms[player.current_arm].shoot()
+                player.arms[player.current_arm].is_charge = False
 
         elif event == A_DOWN:  # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
             player.change_arm(PRE)
@@ -223,9 +236,15 @@ class SleepState:
     def enter(player, event):
 
         if event == X_UP:
-            pass
+            if player.current_arm is 0:
+                player.arms[player.current_arm].shoot()
+                player.arms[player.current_arm].is_charge = False
+
         elif event == X_DOWN:
-            pass
+            if player.current_arm is 0:  # Spur 이면 충전
+                player.arms[player.current_arm].is_charge = True
+            else:  # Spur 가 아니면 발사
+                player.arms[player.current_arm].shoot()
 
         elif event == A_DOWN:           # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
             player.change_arm(PRE)
@@ -265,10 +284,15 @@ class BoostState:  # 부스트 형식으로 해야함
                 player.view_dir_x += 1
 
             elif event == X_UP:
-                pass
+                if player.current_arm is 0:
+                    player.arms[player.current_arm].shoot()
+                    player.arms[player.current_arm].is_charge = False
+
             elif event == X_DOWN:
-                print('attack')
-                pass
+                if player.current_arm is 0:  # Spur 이면 충전
+                    player.arms[player.current_arm].is_charge = True
+                else:  # Spur 가 아니면 발사
+                    player.arms[player.current_arm].shoot()
 
             elif event == A_DOWN:  # 무기 교체 -> 현재 무기 월드에서 삭제, 다음무기 월드에서 생성
                 player.change_arm(PRE)

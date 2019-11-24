@@ -87,7 +87,7 @@ def draw():
     update_canvas()
 
 
-
-
+def get_player():
+    return player
 
 

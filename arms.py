@@ -1,7 +1,7 @@
 from pico2d import *
 
 import game_world
-from bullet import MissileBullet
+from bullet import SpurBullet, MissileBullet, BladeAttack, NemesisBullet
 
 UP, DOWN, RIGHT, LEFT = range(4)
 
@@ -42,7 +42,6 @@ class Arms:
 
 class Spur(Arms):  # 레이저
     arm_image = None
-    bullet_image = None
 
     def __init__(self):
         if Spur.arm_image is None:
@@ -50,11 +49,12 @@ class Spur(Arms):  # 레이저
 
         self.level = 1
         self.MAX_BULLETS = INFINITE
-        self.MAX_EXP = [30, 50, 100]
+        self.MAX_EXP = [30, 100, 230]
         self.damages = [7, 30, 70]  # 차지x, 1단계, 2단계
         self.current_exp = 0
+        self.current_damage = 7
         self.current_bullets = 0
-        self.MAX_SHOOT_COUNT = INFINITE     # 최대 연사 수
+        self.max_shoot_count = INFINITE     # 최대 연사 수
         self.range = 100
 
         self.frame_x = 0
@@ -62,6 +62,11 @@ class Spur(Arms):  # 레이저
         self.frame_size_x = 9     # 9*9 size
         self.frame_size_y = 9
         self.shoot_dir = RIGHT
+        self.bullets = []
+
+        self.is_charge = False
+        self.is_level_max = False
+        self.is_level_min = True
 
         self.x, self.y, self.move_dir = 400, 300, RIGHT
         pass
@@ -92,22 +97,55 @@ class Spur(Arms):  # 레이저
             self.frame_y = 87
             pass
 
-        pass
+        # 레벨 증가
+        if self.is_charge and not self.is_level_max:
+            self.current_exp += 0.2
+        elif not self.is_charge:
+            self.current_exp = 0
+            self.is_level_max = False
+            self.is_level_min = True
+            self.level = 1
+
+        if self.is_level_min and self.current_exp > 0:  # 1레벨, 경험치 0이었는데 증가시
+            self.is_level_min = False
+
+        if (self.level is 3) and (not self.is_level_max):
+            if self.current_exp >= self.MAX_EXP[self.level - 1]:
+                self.current_exp = self.MAX_EXP[self.level - 1]
+                self.is_level_max = True
+            pass
+        elif (self.level is 1) or (self.level is 2):
+            if self.current_exp > self.MAX_EXP[self.level - 1]:
+                self.current_exp -= self.MAX_EXP[self.level - 1]
+                self.level += 1
+
+        # 레벨 감소
+        if self.is_level_max and (self.current_exp is not self.MAX_EXP[self.level - 1]):    # MAX 이고, 경험치가 MAX 는 아니면
+            self.is_level_max = False
+            
+        elif self.level > 1:
+            if self.current_exp < 0:        # 레벨 감소 발생
+                self.level -= 1
+                self.current_exp = self.MAX_EXP[self.level - 1] + self.current_exp      # current_exp 는 음수 이므로 +
+
+        elif (self.current_exp <= 0) and (not self.is_level_min):     # 1레벨에서 경험치가 전부 사라지면
+            self.current_exp = 0
+            self.is_level_min = True
+            pass
+
+        print(self.level, ' and ', self.current_exp)
+
 
     def shoot(self):
-        if self.shoot_dir is UP:
-            pass
-        elif self.shoot_dir is DOWN:
-            pass
-        elif self.shoot_dir is RIGHT:
-            pass
-        elif self.shoot_dir is LEFT:
-            pass
+        if len(self.bullets) < self.max_shoot_count:
+            bullet = SpurBullet(self.x, self.y, self.shoot_dir, self.range, self.level)
+            game_world.add_object(bullet, 1)
+
+            self.bullets.append(bullet)
 
 
 class MissileLauncher(Arms):
     arm_image = None
-    bullet_image = None
 
     def __init__(self):
         if MissileLauncher.arm_image is None:
@@ -119,14 +157,18 @@ class MissileLauncher(Arms):
         self.damages = [20, 30, 50]  # 1레벨, 2레벨, 3레벨
         self.current_exp = 0
         self.current_bullets = 0
-        self.MAX_SHOOT_COUNT = 1    # 최대 연사 수
-        self.range = 250
+        self.max_shoot_count = 1    # 최대 연사 수
+        self.range = 270
 
         self.frame_x = 0
         self.frame_y = 0
         self.frame_size_x = 0
         self.frame_size_y = 0
         self.shoot_dir = RIGHT
+        self.bullets = []
+
+        self.is_level_max = False
+        self.is_level_min = False
 
         self.x, self.y, self.move_dir = 400, 300, RIGHT
         pass
@@ -166,14 +208,44 @@ class MissileLauncher(Arms):
             self.frame_x = 2
             self.frame_y = 68
 
+        # 레벨 증가
+        if self.is_level_min and self.current_exp > 0:  # 1레벨, 경험치 0이었는데 증가시
+            self.is_level_min = False
+
+        if (self.level is 3) and (not self.is_level_max):
+            if self.current_exp >= self.MAX_EXP[self.level - 1]:
+                self.current_exp = self.MAX_EXP[self.level - 1]
+                self.is_level_max = True
+            pass
+        elif (self.level is 1) or (self.level is 2):
+            if self.current_exp > self.MAX_EXP[self.level - 1]:
+                self.current_exp -= self.MAX_EXP[self.level - 1]
+                self.level += 1
+
+        # 레벨 감소
+        if self.is_level_max and (self.current_exp is not self.MAX_EXP[self.level - 1]):  # MAX 이고, 경험치가 MAX 는 아니면
+            self.is_level_max = False
+
+        elif self.level > 1:
+            if self.current_exp < 0:  # 레벨 감소 발생
+                self.level -= 1
+                self.current_exp = self.MAX_EXP[self.level - 1] + self.current_exp  # current_exp 는 음수 이므로 +
+
+        elif (self.current_exp <= 0) and (not self.is_level_min):  # 1레벨에서 경험치가 전부 사라지면
+            self.current_exp = 0
+            self.is_level_min = True
+            pass
+
     def shoot(self):
-        bullet = MissileBullet(self.x, self.y, self.shoot_dir, self.range, self.level)
-        game_world.add_object(bullet, 1)
+        if len(self.bullets) < self.max_shoot_count:
+            bullet = MissileBullet(self.x, self.y, self.shoot_dir, self.range, self.level)
+            game_world.add_object(bullet, 1)
+
+            self.bullets.append(bullet)
 
 
 class Blade(Arms):
     arm_image = None
-    bullet_image = None
 
     def __init__(self):
         if Blade.arm_image is None:
@@ -185,29 +257,57 @@ class Blade(Arms):
         self.damages = [15, 18, 30]  # 1레벨, 2레벨, 3레벨        거리에 따른 데미지 차이 있음
         self.current_exp = 0
         self.current_bullets = 0
-        self.MAX_SHOOT_COUNT = 1    # 최대 연사 수
-        self.range = 100
+        self.max_shoot_count = 1    # 최대 연사 수
+        self.range = 200
 
         self.frame_x = 0
         self.frame_y = 0
         self.frame_size_x = 0
         self.frame_size_y = 0
         self.shoot_dir = RIGHT
+        self.bullets = []
+
+        self.is_level_max = False
+        self.is_level_min = False
 
         self.x, self.y, self.move_dir = 400, 300, RIGHT
         pass
 
     def shoot(self):
-        if self.shoot_dir is UP:
-            pass
-        elif self.shoot_dir is DOWN:
-            pass
-        elif self.shoot_dir is RIGHT:
-            pass
-        elif self.shoot_dir is LEFT:
-            pass
+        if len(self.bullets) < self.max_shoot_count:
+            bullet = BladeAttack(self.x, self.y, self.shoot_dir, self.range, self.level)
+            game_world.add_object(bullet, 1)
+
+            self.bullets.append(bullet)
 
     def update(self):
+        # 레벨 증가
+        if self.is_level_min and self.current_exp > 0:  # 1레벨, 경험치 0이었는데 증가시
+            self.is_level_min = False
+
+        if (self.level is 3) and (not self.is_level_max):
+            if self.current_exp >= self.MAX_EXP[self.level - 1]:
+                self.current_exp = self.MAX_EXP[self.level - 1]
+                self.is_level_max = True
+            pass
+        elif (self.level is 1) or (self.level is 2):
+            if self.current_exp > self.MAX_EXP[self.level - 1]:
+                self.current_exp -= self.MAX_EXP[self.level - 1]
+                self.level += 1
+
+        # 레벨 감소
+        if self.is_level_max and (self.current_exp is not self.MAX_EXP[self.level - 1]):  # MAX 이고, 경험치가 MAX 는 아니면
+            self.is_level_max = False
+
+        elif self.level > 1:
+            if self.current_exp < 0:  # 레벨 감소 발생
+                self.level -= 1
+                self.current_exp = self.MAX_EXP[self.level - 1] + self.current_exp  # current_exp 는 음수 이므로 +
+
+        elif (self.current_exp <= 0) and (not self.is_level_min):  # 1레벨에서 경험치가 전부 사라지면
+            self.current_exp = 0
+            self.is_level_min = True
+            pass
         pass
 
     def draw(self):  # 공격시만 무기가 보이므로 따로 그림
@@ -216,7 +316,6 @@ class Blade(Arms):
 
 class Nemesis(Arms):
     arm_image = None
-    bullet_image = None
 
     def __init__(self):
         if Nemesis.arm_image is None:
@@ -228,7 +327,7 @@ class Nemesis(Arms):
         self.damages = [12, 8, 1]  # 1레벨, 2레벨, 3레벨
         self.current_exp = 0
         self.current_bullets = 0
-        self.MAX_SHOOT_COUNT = 1    # 최대 연사 수
+        self.max_shoot_count = 2    # 최대 연사 수
         self.range = 500
 
         self.frame_x = 0
@@ -236,6 +335,10 @@ class Nemesis(Arms):
         self.frame_size_x = 0
         self.frame_size_y = 0
         self.shoot_dir = RIGHT
+        self.bullets = []
+
+        self.is_level_max = False
+        self.is_level_min = False
 
         self.x, self.y, self.move_dir = 400, 300, RIGHT
         pass
@@ -275,13 +378,38 @@ class Nemesis(Arms):
             self.frame_x = 9
             self.frame_y = 71
 
+        # 레벨 증가
+        if self.is_level_min and self.current_exp > 0:  # 1레벨, 경험치 0이었는데 증가시
+            self.is_level_min = False
+
+        if (self.level is 3) and (not self.is_level_max):
+            if self.current_exp >= self.MAX_EXP[self.level - 1]:
+                self.current_exp = self.MAX_EXP[self.level - 1]
+                self.is_level_max = True
+            pass
+        elif (self.level is 1) or (self.level is 2):
+            if self.current_exp > self.MAX_EXP[self.level - 1]:
+                self.current_exp -= self.MAX_EXP[self.level - 1]
+                self.level += 1
+
+        # 레벨 감소
+        if self.is_level_max and (self.current_exp is not self.MAX_EXP[self.level - 1]):  # MAX 이고, 경험치가 MAX 는 아니면
+            self.is_level_max = False
+
+        elif self.level > 1:
+            if self.current_exp < 0:  # 레벨 감소 발생
+                self.level -= 1
+                self.current_exp = self.MAX_EXP[self.level - 1] + self.current_exp  # current_exp 는 음수 이므로 +
+
+        elif (self.current_exp <= 0) and (not self.is_level_min):  # 1레벨에서 경험치가 전부 사라지면
+            self.current_exp = 0
+            self.is_level_min = True
+            pass
+
     def shoot(self):
-        if self.shoot_dir is UP:
-            pass
-        elif self.shoot_dir is DOWN:
-            pass
-        elif self.shoot_dir is RIGHT:
-            pass
-        elif self.shoot_dir is LEFT:
-            pass
+        if len(self.bullets) < self.max_shoot_count:
+            bullet = NemesisBullet(self.x, self.y, self.shoot_dir, self.range, self.level)
+            game_world.add_object(bullet, 1)
+
+            self.bullets.append(bullet)
 
